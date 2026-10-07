@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
@@ -11,6 +12,7 @@ using OpenDeepWiki.Agents.Tools;
 using OpenDeepWiki.EFCore;
 using OpenDeepWiki.Entities;
 using OpenDeepWiki.Services.AI;
+using OpenDeepWiki.Services.Embeddings;
 using OpenDeepWiki.Services.Repositories;
 
 namespace OpenDeepWiki.MCP;
@@ -22,6 +24,17 @@ namespace OpenDeepWiki.MCP;
 [McpServerToolType]
 public class McpRepositoryTools
 {
+    private const string SemanticReason = "semantic";
+
+    /// <summary>
+    /// Only relaxes escaping so Cyrillic and other non-ASCII text stays readable;
+    /// property names are kept as declared.
+    /// </summary>
+    internal static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
     [McpServerTool, Description("Search documentation within the current GitHub repository and return summarized insights.")]
     public static async Task<string> SearchDoc(
         IContext context,
@@ -31,22 +44,23 @@ public class McpRepositoryTools
         IOptions<RepositoryAnalyzerOptions> repoOptions,
         [Description("Search query or question to answer.")] string query,
         [Description("Maximum number of documents to return (default: 5, max: 20)")] int maxResults = 5,
-        [Description("Language code (default: en)")] string language = "en",
+        [Description("Optional wiki language code, for example ru or en. If omitted, the repository's default documentation language is used.")] string? language = null,
+        ISemanticDocSearch? semanticSearch = null,
         CancellationToken cancellationToken = default)
     {
         var repositoryScopeError = ValidateAndResolveRepositoryScope(mcpServer, out var resolvedOwner, out var resolvedName);
         if (repositoryScopeError != null)
-            return JsonSerializer.Serialize(new { error = true, message = repositoryScopeError });
+            return ToJson(new { error = true, message = repositoryScopeError });
 
         if (string.IsNullOrWhiteSpace(query))
-            return JsonSerializer.Serialize(new { error = true, message = "Search query is required" });
+            return ToJson(new { error = true, message = "Search query is required" });
 
         if (maxResults <= 0) maxResults = 5;
         if (maxResults > 20) maxResults = 20;
 
         var normalizedQuery = query.Trim();
         if (normalizedQuery.Length == 0)
-            return JsonSerializer.Serialize(new { error = true, message = "Search query is required" });
+            return ToJson(new { error = true, message = "Search query is required" });
 
         query = normalizedQuery;
 
@@ -54,20 +68,20 @@ public class McpRepositoryTools
             .FirstOrDefaultAsync(r => r.OrgName == resolvedOwner && r.RepoName == resolvedName && !r.IsDeleted, cancellationToken);
 
         if (repository == null)
-            return JsonSerializer.Serialize(new { error = true, message = $"Repository {resolvedOwner}/{resolvedName} not found" });
+            return ToJson(new { error = true, message = $"Repository {resolvedOwner}/{resolvedName} not found" });
 
         var branch = await context.RepositoryBranches
             .FirstOrDefaultAsync(b => b.RepositoryId == repository.Id && !b.IsDeleted, cancellationToken);
 
         if (branch == null)
-            return JsonSerializer.Serialize(new { error = true, message = "No branch found for this repository" });
+            return ToJson(new { error = true, message = "No branch found for this repository" });
 
-        var branchLanguage = await context.BranchLanguages
-            .FirstOrDefaultAsync(bl => bl.RepositoryBranchId == branch.Id &&
-                                       bl.LanguageCode == language && !bl.IsDeleted, cancellationToken);
+        var branchLanguage = await ResolveSearchLanguageAsync(context, branch.Id, language, cancellationToken);
 
         if (branchLanguage == null)
-            return JsonSerializer.Serialize(new { error = true, message = $"No documentation in language '{language}'" });
+            return ToJson(new { error = true, message = $"No documentation in language '{language ?? "any"}'" });
+
+        language = branchLanguage.LanguageCode;
 
         var tools = new List<AITool>();
         var repoPath = RepositoryWorkspacePath.Resolve(
@@ -85,12 +99,142 @@ public class McpRepositoryTools
             }
         }
 
+        var semanticMatches = semanticSearch == null
+            ? null
+            : await SelectSemanticMatchesAsync(context, semanticSearch, branchLanguage.Id, query, maxResults, cancellationToken);
+        var matches = semanticMatches ?? await SelectKeywordMatchesAsync(context, branchLanguage.Id, query, maxResults, cancellationToken);
+
+        var summary = await BuildSearchSummaryAsync(
+            context,
+            agentFactory,
+            aiProviderResolver,
+            resolvedOwner!,
+            resolvedName!,
+            query,
+            matches,
+            tools,
+            cancellationToken);
+
+        IEnumerable<object> results = semanticMatches != null
+            ? matches.Select(m => (object)new
+            {
+                title = m.Title,
+                path = m.Path,
+                matchLine = 0,
+                snippet = m.Snippet,
+                score = Math.Round(m.Score ?? 0, 3),
+                reason = SemanticReason
+            })
+            : matches.Select(m => (object)new
+            {
+                title = m.Title,
+                path = m.Path,
+                matchLine = m.MatchLine,
+                snippet = m.Snippet
+            });
+
+        return ToJson(new
+        {
+            repository = $"{resolvedOwner}/{resolvedName}",
+            branch = branch.BranchName,
+            language,
+            query,
+            matchCount = matches.Count,
+            results,
+            summary
+        });
+    }
+
+    /// <summary>
+    /// Picks the branch language to search. An explicit code must match exactly;
+    /// without one, the first language that has documents is used: default first,
+    /// then by language code.
+    /// </summary>
+    internal static async Task<BranchLanguage?> ResolveSearchLanguageAsync(
+        IContext context,
+        string branchId,
+        string? language,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(language))
+        {
+            var code = language.Trim();
+            return await context.BranchLanguages
+                .FirstOrDefaultAsync(bl => bl.RepositoryBranchId == branchId &&
+                                           bl.LanguageCode == code && !bl.IsDeleted, cancellationToken);
+        }
+
+        return await context.BranchLanguages
+            .Where(bl => bl.RepositoryBranchId == branchId && !bl.IsDeleted &&
+                         context.DocCatalogs.Any(c => c.BranchLanguageId == bl.Id &&
+                                                      c.DocFileId != null && c.DocFileId != string.Empty))
+            .OrderByDescending(bl => bl.IsDefault)
+            .ThenBy(bl => bl.LanguageCode)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Semantic page selection for one branch language. Returns null when semantic
+    /// search is unavailable, so the caller falls back to keyword search.
+    /// </summary>
+    internal static async Task<List<DocSearchMatch>?> SelectSemanticMatchesAsync(
+        IContext context,
+        ISemanticDocSearch semanticSearch,
+        string branchLanguageId,
+        string query,
+        int maxResults,
+        CancellationToken cancellationToken)
+    {
+        var semantic = await semanticSearch.SearchAsync(query, [branchLanguageId], maxResults, cancellationToken);
+        if (!semantic.IsAvailable)
+            return null;
+
+        var docFileIds = semantic.Hits.Select(hit => hit.DocFileId).Distinct().ToList();
+        var catalogs = await context.DocCatalogs
+            .AsNoTracking()
+            .Where(c => c.BranchLanguageId == branchLanguageId && !c.IsDeleted &&
+                        c.DocFileId != null && docFileIds.Contains(c.DocFileId))
+            .Select(c => new { c.Id, c.DocFileId, c.Title, c.Path, c.Order })
+            .ToListAsync(cancellationToken);
+        var catalogByDocFile = catalogs
+            .GroupBy(c => c.DocFileId!)
+            .ToDictionary(
+                group => group.Key,
+                group => group.OrderBy(c => c.Order).ThenBy(c => c.Id, StringComparer.Ordinal).First());
+
+        var matches = new List<DocSearchMatch>();
+        foreach (var hit in semantic.Hits)
+        {
+            if (!catalogByDocFile.TryGetValue(hit.DocFileId, out var catalog))
+                continue;
+
+            var snippet = hit.Snippet ?? string.Empty;
+            matches.Add(new DocSearchMatch
+            {
+                Title = catalog.Title,
+                Path = catalog.Path,
+                MatchLine = 0,
+                Snippet = snippet.Length > 500 ? snippet[..500] + "..." : snippet,
+                Score = hit.Score
+            });
+        }
+
+        return matches;
+    }
+
+    private static async Task<List<DocSearchMatch>> SelectKeywordMatchesAsync(
+        IContext context,
+        string branchLanguageId,
+        string query,
+        int maxResults,
+        CancellationToken cancellationToken)
+    {
         // Use EF.Functions.Like for SQLite-compatible case-insensitive search
         var escapedQuery = query.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
         var pattern = $"%{escapedQuery}%";
 
         var matchingDocs = await context.DocCatalogs
-            .Where(c => c.BranchLanguageId == branchLanguage.Id &&
+            .Where(c => c.BranchLanguageId == branchLanguageId &&
                         !c.IsDeleted && !string.IsNullOrEmpty(c.DocFileId))
             .Join(context.DocFiles.Where(d => !d.IsDeleted),
                   c => c.DocFileId, d => d.Id,
@@ -106,7 +250,7 @@ public class McpRepositoryTools
             .Take(maxResults)
             .ToListAsync(cancellationToken);
 
-        var matches = matchingDocs.Select(doc =>
+        return matchingDocs.Select(doc =>
         {
             var lines = doc.Content.Split('\n');
             var matchLine = -1;
@@ -130,36 +274,6 @@ public class McpRepositoryTools
                 Snippet = snippet.Length > 500 ? snippet[..500] + "..." : snippet
             };
         }).ToList();
-
-        var summary = await BuildSearchSummaryAsync(
-            context,
-            agentFactory,
-            aiProviderResolver,
-            resolvedOwner!,
-            resolvedName!,
-            query,
-            matches,
-            tools,
-            cancellationToken);
-
-        var results = matches.Select(m => new
-        {
-            title = m.Title,
-            path = m.Path,
-            matchLine = m.MatchLine,
-            snippet = m.Snippet
-        });
-
-        return JsonSerializer.Serialize(new
-        {
-            repository = $"{resolvedOwner}/{resolvedName}",
-            branch = branch.BranchName,
-            language,
-            query,
-            matchCount = matches.Count,
-            results,
-            summary
-        });
     }
 
     [McpServerTool, Description("Get the repository directory structure. Useful for understanding module layout.")]
@@ -174,7 +288,7 @@ public class McpRepositoryTools
     {
         var repositoryScopeError = ValidateAndResolveRepositoryScope(mcpServer, out var resolvedOwner, out var resolvedName);
         if (repositoryScopeError != null)
-            return JsonSerializer.Serialize(new { error = true, message = repositoryScopeError });
+            return ToJson(new { error = true, message = repositoryScopeError });
 
         if (maxDepth <= 0) maxDepth = 1;
         if (maxEntries <= 0) maxEntries = 200;
@@ -183,7 +297,7 @@ public class McpRepositoryTools
             .FirstOrDefaultAsync(r => r.OrgName == resolvedOwner && r.RepoName == resolvedName && !r.IsDeleted, cancellationToken);
 
         if (repository == null)
-            return JsonSerializer.Serialize(new { error = true, message = $"Repository {resolvedOwner}/{resolvedName} not found" });
+            return ToJson(new { error = true, message = $"Repository {resolvedOwner}/{resolvedName} not found" });
 
         // The MCP scope carries owner/repo only, so the branch owning the workspace has to
         // come from the database.
@@ -193,7 +307,7 @@ public class McpRepositoryTools
         var repoPath = RepositoryWorkspacePath.Resolve(
             repoOptions.Value, resolvedOwner!, resolvedName!, branch?.BranchName);
         if (!Directory.Exists(repoPath))
-            return JsonSerializer.Serialize(new { error = true, message = "Repository workspace not found on server" });
+            return ToJson(new { error = true, message = "Repository workspace not found on server" });
 
         var normalizedPath = NormalizeRelativePath(path);
         var targetPath = string.IsNullOrEmpty(normalizedPath)
@@ -201,15 +315,15 @@ public class McpRepositoryTools
             : Path.Combine(repoPath, normalizedPath);
 
         if (!targetPath.StartsWith(repoPath, StringComparison.OrdinalIgnoreCase))
-            return JsonSerializer.Serialize(new { error = true, message = "Invalid path" });
+            return ToJson(new { error = true, message = "Invalid path" });
 
         if (!Directory.Exists(targetPath))
-            return JsonSerializer.Serialize(new { error = true, message = $"Path '{normalizedPath}' does not exist" });
+            return ToJson(new { error = true, message = $"Path '{normalizedPath}' does not exist" });
 
         var entries = await Task.Run(() => BuildDirectoryTree(targetPath, maxDepth, maxEntries), cancellationToken);
         var truncated = entries.Count >= maxEntries;
 
-        return JsonSerializer.Serialize(new
+        return ToJson(new
         {
             repository = $"{resolvedOwner}/{resolvedName}",
             root = string.IsNullOrEmpty(normalizedPath) ? "/" : normalizedPath,
@@ -232,16 +346,16 @@ public class McpRepositoryTools
     {
         var repositoryScopeError = ValidateAndResolveRepositoryScope(mcpServer, out var resolvedOwner, out var resolvedName);
         if (repositoryScopeError != null)
-            return JsonSerializer.Serialize(new { error = true, message = repositoryScopeError });
+            return ToJson(new { error = true, message = repositoryScopeError });
 
         if (string.IsNullOrWhiteSpace(path))
-            return JsonSerializer.Serialize(new { error = true, message = "File path is required" });
+            return ToJson(new { error = true, message = "File path is required" });
 
         var repository = await context.Repositories
             .FirstOrDefaultAsync(r => r.OrgName == resolvedOwner && r.RepoName == resolvedName && !r.IsDeleted, cancellationToken);
 
         if (repository == null)
-            return JsonSerializer.Serialize(new { error = true, message = $"Repository {resolvedOwner}/{resolvedName} not found" });
+            return ToJson(new { error = true, message = $"Repository {resolvedOwner}/{resolvedName} not found" });
 
         // The MCP scope carries owner/repo only, so the branch owning the workspace has to
         // come from the database.
@@ -251,12 +365,12 @@ public class McpRepositoryTools
         var repoPath = RepositoryWorkspacePath.Resolve(
             repoOptions.Value, resolvedOwner!, resolvedName!, branch?.BranchName);
         if (!Directory.Exists(repoPath))
-            return JsonSerializer.Serialize(new { error = true, message = "Repository workspace not found on server" });
+            return ToJson(new { error = true, message = "Repository workspace not found on server" });
 
         var gitTool = new GitTool(repoPath);
         var content = await gitTool.ReadAsync(path, offset, limit, cancellationToken);
 
-        return JsonSerializer.Serialize(new
+        return ToJson(new
         {
             repository = $"{resolvedOwner}/{resolvedName}",
             path,
@@ -496,11 +610,21 @@ public class McpRepositoryTools
                string.Equals(name, ".git", StringComparison.OrdinalIgnoreCase);
     }
 
-    private sealed class DocSearchMatch
+    private static string ToJson<T>(T value)
+    {
+        return JsonSerializer.Serialize(value, JsonOptions);
+    }
+
+    internal sealed class DocSearchMatch
     {
         public string Title { get; init; } = string.Empty;
         public string Path { get; init; } = string.Empty;
         public int MatchLine { get; init; }
         public string Snippet { get; init; } = string.Empty;
+
+        /// <summary>
+        /// Cosine similarity; set only by the semantic search.
+        /// </summary>
+        public double? Score { get; init; }
     }
 }

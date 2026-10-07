@@ -48,6 +48,7 @@ public interface IContext : IDisposable
     DbSet<BranchGenerationTask> BranchGenerationTasks { get; set; }
     DbSet<RepositoryGenerationLock> RepositoryGenerationLocks { get; set; }
     DbSet<WikiGenerationSlot> WikiGenerationSlots { get; set; }
+    DbSet<DocChunkEmbedding> DocChunkEmbeddings { get; set; }
     DbSet<GraphifyArtifact> GraphifyArtifacts { get; set; }
     DbSet<McpProvider> McpProviders { get; set; }
     DbSet<McpUsageLog> McpUsageLogs { get; set; }
@@ -106,6 +107,7 @@ public abstract class MasterDbContext : DbContext, IContext
     public DbSet<BranchGenerationTask> BranchGenerationTasks { get; set; } = null!;
     public DbSet<RepositoryGenerationLock> RepositoryGenerationLocks { get; set; } = null!;
     public DbSet<WikiGenerationSlot> WikiGenerationSlots { get; set; } = null!;
+    public DbSet<DocChunkEmbedding> DocChunkEmbeddings { get; set; } = null!;
     public DbSet<GraphifyArtifact> GraphifyArtifacts { get; set; } = null!;
     public DbSet<McpProvider> McpProviders { get; set; } = null!;
     public DbSet<McpUsageLog> McpUsageLogs { get; set; } = null!;
@@ -364,6 +366,12 @@ public abstract class MasterDbContext : DbContext, IContext
         modelBuilder.Entity<WikiGenerationSlot>()
             .HasIndex(slot => slot.SlotIndex)
             .IsUnique();
+
+        modelBuilder.Entity<DocChunkEmbedding>()
+            .HasIndex(e => e.DocFileId);
+
+        modelBuilder.Entity<DocChunkEmbedding>()
+            .HasIndex(e => e.BranchLanguageId);
 
         // GraphifyArtifact 仓库分支唯一索引（每个分支保留一个最新图谱）
         modelBuilder.Entity<GraphifyArtifact>()

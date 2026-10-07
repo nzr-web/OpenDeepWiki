@@ -16,6 +16,7 @@ using OpenDeepWiki.Services.Auth;
 using OpenDeepWiki.Services.GitHub;
 using OpenDeepWiki.Services.Graphify;
 using OpenDeepWiki.Services.Chat;
+using OpenDeepWiki.Services.Embeddings;
 using OpenDeepWiki.Services.MindMap;
 using OpenDeepWiki.Services.Notifications;
 using OpenDeepWiki.Services.OAuth;
@@ -280,6 +281,15 @@ try
     builder.Services.AddHostedService<TranslationWorker>();
     builder.Services.AddHostedService<MindMapWorker>();
     builder.Services.AddHostedService<GraphifyArtifactWorker>();
+
+    // Semantic doc search (embeddings); disabled while EMBEDDING_ENDPOINT is empty
+    builder.Services.AddOptions<EmbeddingOptions>()
+        .Bind(builder.Configuration.GetSection(EmbeddingOptions.SectionName))
+        .PostConfigure(options => EmbeddingOptionsConfigurator.Apply(options, builder.Configuration));
+    builder.Services.AddHttpClient(EmbeddingClient.HttpClientName, client => client.Timeout = EmbeddingClient.Timeout);
+    builder.Services.AddSingleton<IEmbeddingClient, EmbeddingClient>();
+    builder.Services.AddScoped<ISemanticDocSearch, SemanticDocSearch>();
+    builder.Services.AddHostedService<DocEmbeddingIndexWorker>();
 
     // 配置增量更新选项
     // Requirements: 6.2, 6.3, 6.6 - 可配置的更新间隔

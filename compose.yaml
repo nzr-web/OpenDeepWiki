@@ -8,6 +8,8 @@
       - "18081:8080"
     restart: unless-stopped
     user: "0:0"
+    depends_on:
+      - embeddings
     environment:
       # ASP.NET Core 环境
       - ASPNETCORE_ENVIRONMENT=Production
@@ -74,6 +76,10 @@
 
       # 多语言支持 (逗号分隔，如: en,zh,ja,ko,es,fr,de,pt-br)
       - WIKI_LANGUAGES=${WIKI_LANGUAGES:-en,zh,zh-tw,ja,ko,es,fr,de,pt-br,pl,ru,ar}
+
+      # Semantic doc search (embeddings). EMBEDDING_ENDPOINT= (set to empty) disables it
+      - EMBEDDING_ENDPOINT=${EMBEDDING_ENDPOINT-http://embeddings:80/v1}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-intfloat/multilingual-e5-small}
     volumes:
       - ./data:/data
       - /home/zhangruibo:/host/home/zhangruibo:ro
@@ -91,3 +97,10 @@
       - NODE_ENV=production
       - SITE_URL=${SITE_URL:-http://localhost:8090}
       - API_PROXY_URL=http://opendeepwiki:8080
+
+  embeddings:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.4
+    command: --model-id intfloat/multilingual-e5-small --auto-truncate
+    restart: unless-stopped
+    volumes:
+      - ./data/hf-cache:/data

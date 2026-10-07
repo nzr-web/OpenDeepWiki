@@ -10,6 +10,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      embeddings:
+        # plain start order, no health wait: the backend starts while the model downloads
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
@@ -64,6 +67,10 @@ services:
 
       # 多语言支持 (逗号分隔，如: en,zh,ja,ko,es,fr,de,pt-br)
       - WIKI_LANGUAGES=en,zh,zh-tw,ja,ko,es,fr,de,pt-br,pl,ru,ar
+
+      # Semantic doc search (embeddings). EMBEDDING_ENDPOINT= (set to empty) disables it
+      - EMBEDDING_ENDPOINT=${EMBEDDING_ENDPOINT-http://embeddings:80/v1}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-intfloat/multilingual-e5-small}
     volumes:
       - ./data:/data
 
@@ -100,6 +107,13 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  embeddings:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.4
+    command: --model-id intfloat/multilingual-e5-small --auto-truncate
+    restart: unless-stopped
+    volumes:
+      - ./data/hf-cache:/data
 
 volumes:
   pgdata:

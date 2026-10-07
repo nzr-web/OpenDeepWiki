@@ -487,6 +487,29 @@ public static class DbInitializer
         await ctx.Database.ExecuteSqlRawAsync(
             "CREATE UNIQUE INDEX IF NOT EXISTS IX_WikiGenerationSlots_SlotIndex ON WikiGenerationSlots (SlotIndex)");
 
+        await ctx.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS DocChunkEmbeddings (
+                Id TEXT NOT NULL PRIMARY KEY,
+                DocFileId TEXT NOT NULL,
+                BranchLanguageId TEXT NOT NULL,
+                ChunkIndex INTEGER NOT NULL,
+                Text TEXT NOT NULL,
+                ContentHash TEXT NOT NULL,
+                SourceStamp TEXT NOT NULL,
+                Model TEXT NOT NULL,
+                Dimensions INTEGER NOT NULL,
+                Vector BLOB NOT NULL,
+                CreatedAt TEXT NOT NULL,
+                UpdatedAt TEXT,
+                DeletedAt TEXT,
+                IsDeleted INTEGER NOT NULL DEFAULT 0,
+                Version BLOB
+            )");
+        await ctx.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_DocChunkEmbeddings_DocFileId ON DocChunkEmbeddings (DocFileId)");
+        await ctx.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_DocChunkEmbeddings_BranchLanguageId ON DocChunkEmbeddings (BranchLanguageId)");
+
         // Add Description column if not exists
         var connection = ctx.Database.GetDbConnection();
         if (connection.State != System.Data.ConnectionState.Open)
@@ -757,6 +780,29 @@ public static class DbInitializer
             )");
         await ctx.Database.ExecuteSqlRawAsync(@"
             CREATE UNIQUE INDEX IF NOT EXISTS ""IX_WikiGenerationSlots_SlotIndex"" ON ""WikiGenerationSlots"" (""SlotIndex"")");
+
+        await ctx.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""DocChunkEmbeddings"" (
+                ""Id"" TEXT NOT NULL PRIMARY KEY,
+                ""DocFileId"" TEXT NOT NULL,
+                ""BranchLanguageId"" TEXT NOT NULL,
+                ""ChunkIndex"" INTEGER NOT NULL,
+                ""Text"" TEXT NOT NULL,
+                ""ContentHash"" TEXT NOT NULL,
+                ""SourceStamp"" TIMESTAMP WITH TIME ZONE NOT NULL,
+                ""Model"" TEXT NOT NULL,
+                ""Dimensions"" INTEGER NOT NULL,
+                ""Vector"" BYTEA NOT NULL,
+                ""CreatedAt"" TIMESTAMP WITH TIME ZONE NOT NULL,
+                ""UpdatedAt"" TIMESTAMP WITH TIME ZONE,
+                ""DeletedAt"" TIMESTAMP WITH TIME ZONE,
+                ""IsDeleted"" BOOLEAN NOT NULL DEFAULT FALSE,
+                ""Version"" BYTEA
+            )");
+        await ctx.Database.ExecuteSqlRawAsync(@"
+            CREATE INDEX IF NOT EXISTS ""IX_DocChunkEmbeddings_DocFileId"" ON ""DocChunkEmbeddings"" (""DocFileId"")");
+        await ctx.Database.ExecuteSqlRawAsync(@"
+            CREATE INDEX IF NOT EXISTS ""IX_DocChunkEmbeddings_BranchLanguageId"" ON ""DocChunkEmbeddings"" (""BranchLanguageId"")");
 
         // Add Description column if not exists
         await ctx.Database.ExecuteSqlRawAsync(@"

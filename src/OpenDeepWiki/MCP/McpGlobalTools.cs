@@ -1,9 +1,11 @@
 using System.ComponentModel;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using ModelContextProtocol.Server;
 using OpenDeepWiki.EFCore;
 using OpenDeepWiki.Entities;
+using OpenDeepWiki.Services.Embeddings;
 
 namespace OpenDeepWiki.MCP;
 
@@ -17,10 +19,12 @@ public class McpGlobalTools
     private const int MaxRepositoryResults = 20;
     private const int MaxDocumentResults = 50;
     private const int DefaultSnippetLength = 500;
+    private const string SemanticReason = "semantic";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     [McpServerTool, Description("List repositories available in OpenDeepWiki with branch/language metadata. Use this to discover repository owners and names.")]
@@ -128,7 +132,7 @@ public class McpGlobalTools
     public static async Task<string> SearchRepositories(
         IContext context,
         [Description("User question or search query used to identify relevant repositories.")] string query,
-        [Description("Preferred wiki language code. Default: zh. Pass empty to search every language.")] string language = "zh",
+        [Description("Optional wiki language code, for example ru or en. Omit or pass empty to search every language.")] string? language = null,
         [Description("Maximum repositories to return. Default: 5, max: 20.")] int maxResults = 5,
         CancellationToken cancellationToken = default)
     {
@@ -160,15 +164,16 @@ public class McpGlobalTools
         });
     }
 
-    [McpServerTool, Description("Search generated wiki documentation. If owner/repo are omitted, routes the query to relevant repositories first and searches across them.")]
+    [McpServerTool, Description("Search generated wiki documentation. Questions in natural language are supported: when semantic search is available, all repositories (or the given owner/repo) are searched by meaning; otherwise the query is matched by keywords, routing it to relevant repositories first when owner/repo are omitted.")]
     public static async Task<string> SearchDocs(
         IContext context,
         [Description("User question or search query.")] string query,
         [Description("Optional repository owner/org. If omitted, relevant repositories are selected automatically.")] string? owner = null,
         [Description("Optional repository name. If omitted, relevant repositories are selected automatically.")] string? repo = null,
-        [Description("Preferred wiki language code. Default: zh. Pass empty to search every language.")] string language = "zh",
-        [Description("Maximum routed repositories when owner/repo are omitted. Default: 5, max: 20.")] int maxRepositories = 5,
+        [Description("Optional wiki language code, for example ru or en. Omit or pass empty to search every language.")] string? language = null,
+        [Description("Maximum routed repositories for keyword search when owner/repo are omitted. Default: 5, max: 20.")] int maxRepositories = 5,
         [Description("Maximum document results. Default: 10, max: 50.")] int maxResults = 10,
+        ISemanticDocSearch? semanticSearch = null,
         CancellationToken cancellationToken = default)
     {
         var normalizedQuery = Normalize(query);
@@ -184,8 +189,9 @@ public class McpGlobalTools
         var normalizedLanguage = Normalize(language);
         var tokens = Tokenize(normalizedQuery);
 
-        List<RepositoryRouteResult> routedRepositories;
-        if (!string.IsNullOrWhiteSpace(normalizedOwner) && !string.IsNullOrWhiteSpace(normalizedRepo))
+        var explicitRepository = !string.IsNullOrWhiteSpace(normalizedOwner) && !string.IsNullOrWhiteSpace(normalizedRepo);
+        List<RepositoryRouteResult> routedRepositories = [];
+        if (explicitRepository)
         {
             var exists = await context.Repositories
                 .AsNoTracking()
@@ -209,7 +215,43 @@ public class McpGlobalTools
                 new RepositoryRouteResult(normalizedOwner!, normalizedRepo!, 0, 0, true, "explicit repository scope")
             ];
         }
-        else
+
+        if (semanticSearch != null)
+        {
+            var semantic = await TrySemanticSearchAsync(
+                context,
+                semanticSearch,
+                normalizedQuery,
+                explicitRepository ? normalizedOwner : null,
+                explicitRepository ? normalizedRepo : null,
+                normalizedLanguage,
+                maxResults,
+                cancellationToken);
+            if (semantic != null)
+            {
+                var semanticRoutes = semantic
+                    .GroupBy(result => (result.Owner.ToLowerInvariant(), result.Repo.ToLowerInvariant()))
+                    .Select(group => new RepositoryRouteResult(
+                        group.First().Owner,
+                        group.First().Repo,
+                        group.Max(item => item.Score),
+                        0,
+                        false,
+                        SemanticReason))
+                    .ToList();
+
+                return ToJson(new
+                {
+                    query = normalizedQuery,
+                    language = normalizedLanguage,
+                    routedRepositories = semanticRoutes,
+                    count = semantic.Count,
+                    results = semantic
+                });
+            }
+        }
+
+        if (!explicitRepository)
         {
             routedRepositories = (await LoadRepositorySearchRowsAsync(context, normalizedLanguage, cancellationToken))
                 .Select(row => ScoreRepository(row, tokens, normalizedQuery))
@@ -265,7 +307,7 @@ public class McpGlobalTools
         [Description("Repository owner/org, for example YD_HW/services.")] string owner,
         [Description("Repository name.")] string repo,
         [Description("Wiki document path returned by SearchDocs.")] string path,
-        [Description("Preferred wiki language code. Default: zh. Pass empty to allow any language.")] string language = "zh",
+        [Description("Optional preferred wiki language code, for example ru or en. Omit or pass empty to allow any language.")] string? language = null,
         [Description("Optional branch name. If omitted, the first matching processed branch is used.")] string? branch = null,
         CancellationToken cancellationToken = default)
     {
@@ -327,6 +369,144 @@ public class McpGlobalTools
             sourceFiles = TryParseSourceFiles(document.SourceFiles),
             content = document.Content
         });
+    }
+
+    /// <summary>
+    /// Semantic variant of SearchDocs. Returns null when semantic search is unavailable,
+    /// so the caller falls back to the keyword algorithm.
+    /// </summary>
+    private static async Task<List<DocumentSearchResult>?> TrySemanticSearchAsync(
+        IContext context,
+        ISemanticDocSearch semanticSearch,
+        string query,
+        string? owner,
+        string? repo,
+        string? language,
+        int maxResults,
+        CancellationToken cancellationToken)
+    {
+        var scopeQuery = context.Repositories
+            .AsNoTracking()
+            .Where(repository => !repository.IsDeleted && repository.Status == RepositoryStatus.Completed)
+            .Join(
+                context.RepositoryBranches.AsNoTracking().Where(branch => !branch.IsDeleted),
+                repository => repository.Id,
+                branch => branch.RepositoryId,
+                (repository, branch) => new { repository, branch })
+            .Join(
+                context.BranchLanguages.AsNoTracking().Where(branchLanguage => !branchLanguage.IsDeleted),
+                pair => pair.branch.Id,
+                branchLanguage => branchLanguage.RepositoryBranchId,
+                (pair, branchLanguage) => new
+                {
+                    BranchLanguageId = branchLanguage.Id,
+                    RepositoryId = pair.repository.Id,
+                    Owner = pair.repository.OrgName,
+                    Repo = pair.repository.RepoName,
+                    Branch = pair.branch.BranchName,
+                    Language = branchLanguage.LanguageCode
+                });
+
+        if (!string.IsNullOrWhiteSpace(owner) && !string.IsNullOrWhiteSpace(repo))
+        {
+            var ownerLower = owner.ToLower();
+            var repoLower = repo.ToLower();
+            scopeQuery = scopeQuery.Where(item => item.Owner.ToLower() == ownerLower && item.Repo.ToLower() == repoLower);
+        }
+
+        if (!string.IsNullOrWhiteSpace(language))
+        {
+            scopeQuery = scopeQuery.Where(item => item.Language == language);
+        }
+
+        var scope = await scopeQuery.ToListAsync(cancellationToken);
+        if (scope.Count == 0)
+        {
+            return null;
+        }
+
+        var scopeById = scope
+            .GroupBy(item => item.BranchLanguageId)
+            .ToDictionary(group => group.Key, group => group.First());
+
+        // Results are deduplicated by (owner, repo, path); several branch languages of one
+        // repository may hold the same page, so ask for enough pages to survive that.
+        var perRepository = scope
+            .GroupBy(item => item.RepositoryId)
+            .Max(group => group.Count());
+        var topK = maxResults * Math.Max(1, perRepository);
+
+        var semantic = await semanticSearch.SearchAsync(query, scopeById.Keys.ToList(), topK, cancellationToken);
+        if (!semantic.IsAvailable)
+        {
+            return null;
+        }
+
+        var docFileIds = semantic.Hits.Select(hit => hit.DocFileId).Distinct().ToList();
+        var catalogs = await context.DocCatalogs
+            .AsNoTracking()
+            .Where(catalog => !catalog.IsDeleted &&
+                              catalog.DocFileId != null &&
+                              docFileIds.Contains(catalog.DocFileId))
+            .Select(catalog => new
+            {
+                catalog.Id,
+                catalog.DocFileId,
+                catalog.BranchLanguageId,
+                catalog.Title,
+                catalog.Path,
+                catalog.Order
+            })
+            .ToListAsync(cancellationToken);
+        var catalogByDocFile = catalogs
+            .GroupBy(catalog => catalog.DocFileId!)
+            .ToDictionary(
+                group => group.Key,
+                group => group.OrderBy(catalog => catalog.Order).ThenBy(catalog => catalog.Id, StringComparer.Ordinal).First());
+
+        var results = new List<DocumentSearchResult>();
+        foreach (var hit in semantic.Hits)
+        {
+            if (!scopeById.TryGetValue(hit.BranchLanguageId, out var scopeItem) ||
+                !catalogByDocFile.TryGetValue(hit.DocFileId, out var catalog))
+            {
+                continue;
+            }
+
+            results.Add(new DocumentSearchResult(
+                scopeItem.Owner,
+                scopeItem.Repo,
+                scopeItem.Branch,
+                scopeItem.Language,
+                catalog.Title,
+                catalog.Path,
+                (int)Math.Round(hit.Score * 1000),
+                0,
+                false,
+                SemanticReason,
+                TruncateSnippet(hit.Snippet, DefaultSnippetLength)));
+        }
+
+        return results
+            .GroupBy(result => (result.Owner.ToLowerInvariant(), result.Repo.ToLowerInvariant(), result.Path.ToLowerInvariant()))
+            .Select(group => group.OrderByDescending(result => result.Score).First())
+            .OrderByDescending(result => result.Score)
+            .ThenBy(result => result.Owner, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(result => result.Repo, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(result => result.Path, StringComparer.OrdinalIgnoreCase)
+            .Take(maxResults)
+            .ToList();
+    }
+
+    private static string TruncateSnippet(string? text, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = text.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength] + "...";
     }
 
     private static async Task<List<RepositorySearchRow>> LoadRepositorySearchRowsAsync(
