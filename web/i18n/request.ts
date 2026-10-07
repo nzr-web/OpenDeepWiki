@@ -1,4 +1,5 @@
 ﻿import { getRequestConfig } from 'next-intl/server';
+import { deepMerge, type MessageTree } from './merge-messages';
 import { uiLocales, defaultUiLocale, uiLocaleNames, type UiLocale } from './config';
 
 // Re-export for backward compatibility with existing imports
@@ -7,41 +8,46 @@ export type Locale = UiLocale;
 const defaultLocale = defaultUiLocale;
 export const localeNames = uiLocaleNames;
 
-// 动态加载所有翻译文件
-async function loadMessages(locale: Locale) {
-  const common = (await import(`./messages/${locale}/common.json`)).default;
-  const theme = (await import(`./messages/${locale}/theme.json`)).default;
-  const sidebar = (await import(`./messages/${locale}/sidebar.json`)).default;
-  const auth = (await import(`./messages/${locale}/auth.json`)).default;
-  const authUi = (await import(`./messages/${locale}/auth-ui.json`)).default;
-  const home = (await import(`./messages/${locale}/home.json`)).default;
-  const ui = (await import(`./messages/${locale}/ui.json`)).default;
-  const recommend = (await import(`./messages/${locale}/recommend.json`)).default;
-  const mindmap = (await import(`./messages/${locale}/mindmap.json`)).default;
-  const settings = (await import(`./messages/${locale}/settings.json`)).default;
-  const profile = (await import(`./messages/${locale}/profile.json`)).default;
-  const apps = (await import(`./messages/${locale}/apps.json`)).default;
-  const admin = (await import(`./messages/${locale}/admin.json`)).default;
-  const chat = (await import(`./messages/${locale}/chat.json`)).default;
-  const subscribe = (await import(`./messages/${locale}/subscribe.json`)).default;
+const namespaces = [
+  'common',
+  'theme',
+  'sidebar',
+  'auth',
+  'auth-ui',
+  'home',
+  'ui',
+  'recommend',
+  'mindmap',
+  'settings',
+  'profile',
+  'apps',
+  'admin',
+  'chat',
+  'subscribe',
+] as const;
 
-  return {
-    common,
-    theme,
-    sidebar,
-    auth,
-    authUi,
-    home,
-    ui,
-    recommend,
-    mindmap,
-    settings,
-    profile,
-    apps,
-    admin,
-    chat,
-    subscribe,
-  };
+// 非英文语言文件缺失时返回 undefined，对应 namespace 整体回退到英文
+async function importMessages(locale: Locale, name: string): Promise<MessageTree | undefined> {
+  try {
+    return (await import(`./messages/${locale}/${name}.json`)).default;
+  } catch {
+    return undefined;
+  }
+}
+
+// 动态加载所有翻译文件；非英文语言缺失的文件或键回退到英文
+async function loadMessages(locale: Locale) {
+  const entries = await Promise.all(
+    namespaces.map(async (name) => {
+      const en: MessageTree = (await import(`./messages/en/${name}.json`)).default;
+      if (locale === 'en') return [name, en] as const;
+      return [name, deepMerge(en, await importMessages(locale, name))] as const;
+    })
+  );
+
+  const byName = Object.fromEntries(entries);
+  const { 'auth-ui': authUi, ...rest } = byName;
+  return { ...rest, authUi };
 }
 
 export default getRequestConfig(async ({ requestLocale }) => {

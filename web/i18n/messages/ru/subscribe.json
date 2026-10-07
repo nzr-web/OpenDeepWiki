@@ -1,0 +1,20 @@
+{
+  "title": "Подписки",
+  "description": "Репозитории, за обновлениями которых вы следите",
+  "loginRequired": "Войдите, чтобы увидеть свои подписки",
+  "loginPrompt": "Войдите, чтобы управлять подписками на репозитории",
+  "noSubscriptions": "Подписок пока нет",
+  "noSubscriptionsPrompt": "Подпишитесь на репозитории, и они появятся здесь",
+  "unwatch": "Отписаться",
+  "noDescription": "Нет описания",
+  "today": "Сегодня",
+  "yesterday": "Вчера",
+  "daysAgo": "{count, plural, one {# день назад} few {# дня назад} many {# дней назад} other {# дня назад}}",
+  "weeksAgo": "{count, plural, one {# неделю назад} few {# недели назад} many {# недель назад} other {# недели назад}}",
+  "monthsAgo": "{count, plural, one {# месяц назад} few {# месяца назад} many {# месяцев назад} other {# месяца назад}}",
+  "pageOf": "Страница {current} из {total}",
+  "previous": "Назад",
+  "next": "Вперёд",
+  "failedToLoad": "Не удалось загрузить подписки",
+  "failedToUnsubscribe": "Не удалось отписаться"
+}

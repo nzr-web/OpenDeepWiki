@@ -1,13 +1,18 @@
 ﻿"use client";
 
-const UI_LOCALES = ["zh", "en", "ko", "ja", "es", "fr", "de", "pt-BR"] as const;
-const DEFAULT_LOCALE = "en";
+const UI_LOCALES = ["zh", "en", "ru", "ko", "ja", "es", "fr", "de", "pt-BR"] as const;
+const DEFAULT_LOCALE = "ru";
 
 const messages: Record<string, { title: string; description: string; back: string }> = {
   en: {
     title: "Page failed to load",
     description: "An unexpected error occurred. Please try again in a moment.",
     back: "Back to Home",
+  },
+  ru: {
+    title: "Не удалось загрузить страницу",
+    description: "Произошла непредвиденная ошибка. Повторите попытку чуть позже.",
+    back: "На главную",
   },
   zh: {
     title: "页面加载失败",

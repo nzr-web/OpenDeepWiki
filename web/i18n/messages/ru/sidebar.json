@@ -1,0 +1,17 @@
+{
+  "explore": "Обзор",
+  "recommend": "Рекомендации",
+  "private": "Приватные репозитории",
+  "subscribe": "Подписки",
+  "bookmarks": "Закладки",
+  "organizations": "Организации",
+  "apps": "Мои приложения",
+  "mcp": "Сервисы MCP",
+  "github": "GitHub",
+  "feishu": "Feishu",
+  "scanQrCode": "Отсканируйте код, чтобы подписаться на Feishu",
+  "groupDiscover": "Обзор",
+  "groupWorkspace": "Рабочая область",
+  "groupTools": "Инструменты",
+  "brandTagline": "База знаний о коде"
+}

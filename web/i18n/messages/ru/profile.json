@@ -1,0 +1,22 @@
+{
+  "title": "Профиль",
+  "description": "Управляйте личными данными",
+  "name": "Имя пользователя",
+  "email": "Email",
+  "phone": "Телефон",
+  "phonePlaceholder": "Необязательно",
+  "avatarUrl": "URL аватара",
+  "updateSuccess": "Профиль обновлён",
+  "updateFailed": "Не удалось обновить",
+  "nameRequired": "Укажите имя пользователя",
+  "changePassword": "Сменить пароль",
+  "passwordDescription": "Меняйте пароль регулярно, чтобы защитить аккаунт",
+  "currentPassword": "Текущий пароль",
+  "newPassword": "Новый пароль",
+  "confirmPassword": "Подтвердите новый пароль",
+  "passwordPlaceholder": "Не короче 6 символов",
+  "passwordChanged": "Пароль изменён",
+  "passwordChangeFailed": "Не удалось сменить пароль",
+  "passwordMismatch": "Пароли не совпадают",
+  "passwordTooShort": "Пароль должен быть не короче 6 символов"
+}

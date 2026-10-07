@@ -1,0 +1,95 @@
+{
+  "assistant": {
+    "title": "Агент NzrAiWiki",
+    "greeting": "👋 Здравствуйте! Я агент NzrAiWiki",
+    "greetingSubtitle": "Задавайте любые вопросы по документации",
+    "disabled": "Агент отключён",
+    "noModels": "Нет доступных моделей. Обратитесь к администратору, чтобы он настроил модели",
+    "thinking": "Думаю...",
+    "selectModel": "Сначала выберите модель",
+    "loadConfigFailed": "Не удалось загрузить настройки. Обновите страницу и повторите попытку"
+  },
+  "panel": {
+    "clearHistory": "Очистить историю",
+    "close": "Закрыть",
+    "inputPlaceholder": "Введите сообщение, Enter — отправить...",
+    "uploadImage": "Загрузить изображение",
+    "send": "Отправить",
+    "retry": "Повторить",
+    "closeError": "Закрыть",
+    "shareConversation": "Поделиться этим диалогом",
+    "shareNoMessages": "Нет диалога, которым можно поделиться",
+    "shareSelectModel": "Сначала выберите модель",
+    "shareFailed": "Не удалось поделиться диалогом. Повторите попытку.",
+    "shareDialogTitle": "Поделиться этим диалогом",
+    "shareDialogDescription": "Создайте ссылку только для чтения со снимком этого диалога.",
+    "shareLink": "Ссылка",
+    "shareId": "ID ссылки",
+    "copied": "Скопировано",
+    "copyLink": "Копировать ссылку",
+    "openSharePage": "Открыть страницу",
+    "shareTitle": "Заголовок",
+    "shareTitlePlaceholder": "Дайте ссылке название",
+    "shareDescription": "Описание (необязательно)",
+    "shareDescriptionPlaceholder": "Добавьте пояснение для читателей",
+    "shareExpiration": "Срок действия (минут)",
+    "shareExpirationHint": "По умолчанию 7 дней, максимум 30 дней.",
+    "generateShareLink": "Создать ссылку",
+    "generating": "Создаём..."
+  },
+  "message": {
+    "thinking": "Ход рассуждений",
+    "toolCall": "Вызов инструмента",
+    "toolResult": "Результат инструмента",
+    "toolError": "Ошибка выполнения инструмента",
+    "uploadedImage": "Загруженное изображение",
+    "quotedFrom": "Цитата из:",
+    "currentPage": "Текущая страница",
+    "tokens": "токенов",
+    "inputTokens": "вход",
+    "outputTokens": "выход"
+  },
+  "image": {
+    "upload": "Загрузить изображение",
+    "supportedFormats": "Поддерживаются PNG, JPG, GIF, WebP. Не больше 10 МБ на изображение, не более {maxImages, plural, one {# изображения} few {# изображений} many {# изображений} other {# изображений}}",
+    "unsupportedFormat": "Поддерживаются только форматы PNG, JPG, GIF, WebP",
+    "sizeTooLarge": "Размер изображения не должен превышать 10 МБ",
+    "preview": "Предпросмотр {index}",
+    "remove": "Удалить изображение {index}",
+    "invalidFormat": "Некорректный формат изображения Base64",
+    "readFailed": "Не удалось прочитать файл"
+  },
+  "error": {
+    "chatFailed": "Ошибка чата. Повторите попытку",
+    "configMissing": "Настройки не найдены",
+    "modelUnavailable": "Модель недоступна",
+    "requestTimeout": "Время ожидания истекло. Повторите попытку",
+    "connectionFailed": "Не удалось подключиться. Проверьте сеть",
+    "sendFailed": "Не удалось отправить. Повторите попытку",
+    "loadConfigFailed": "Не удалось загрузить настройки",
+    "noResponse": "Не удалось прочитать ответ"
+  },
+  "embed": {
+    "title": "Чат-ассистент",
+    "greeting": "👋 Здравствуйте!",
+    "greetingSubtitle": "Чем могу помочь?",
+    "inputPlaceholder": "Введите сообщение...",
+    "configInvalid": "Настройки не прошли проверку",
+    "loadConfigFailed": "Не удалось загрузить настройки"
+  },
+  "model": {
+    "selector": "Выберите модель",
+    "noModels": "Нет доступных моделей",
+    "provider": "Провайдер"
+  },
+  "quote": {
+    "icon": "📎",
+    "label": "Цитата из:",
+    "remove": "Убрать цитату"
+  },
+  "share": {
+    "title": "Общий диалог",
+    "messageCount": "{count, plural, one {# сообщение чата} few {# сообщения чата} many {# сообщений чата} other {# сообщения чата}}",
+    "empty": "В этом общем диалоге пока нет сообщений."
+  }
+}

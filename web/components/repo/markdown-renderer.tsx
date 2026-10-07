@@ -44,6 +44,17 @@ const repoMarkdownText = {
     copyCode: "Copy code",
     renderError: "Mermaid diagram could not be rendered",
   },
+  ru: {
+    zoomOut: "Уменьшить",
+    zoomIn: "Увеличить",
+    resetView: "Сбросить вид",
+    close: "Закрыть (ESC)",
+    hint: "Колесо — масштаб · перетаскивание — сдвиг · ESC — закрыть",
+    loading: "Загрузка диаграммы...",
+    enlarge: "Нажмите, чтобы увеличить",
+    copyCode: "Копировать код",
+    renderError: "Не удалось отобразить диаграмму Mermaid",
+  },
   ja: {
     zoomOut: "縮小",
     zoomIn: "拡大",
@@ -462,11 +473,13 @@ function createHeadingIdMap(texts: string[]): Map<string, string[]> {
 export function MarkdownRenderer({ content, language }: MarkdownRendererProps) {
   const locale = language === "en"
     ? "en"
-    : language === "ja"
-      ? "ja"
-      : language === "ko"
-        ? "ko"
-        : "zh";
+    : language === "ru"
+      ? "ru"
+      : language === "ja"
+        ? "ja"
+        : language === "ko"
+          ? "ko"
+          : "zh";
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   

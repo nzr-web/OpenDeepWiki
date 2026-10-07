@@ -16,6 +16,7 @@
 export const uiLocales = [
   "zh",
   "en",
+  "ru",
   "ko",
   "ja",
   "es",
@@ -26,11 +27,12 @@ export const uiLocales = [
 
 export type UiLocale = (typeof uiLocales)[number];
 
-export const defaultUiLocale: UiLocale = "en";
+export const defaultUiLocale: UiLocale = "ru";
 
 export const uiLocaleNames: Record<UiLocale, string> = {
   zh: "简体中文",
   en: "English",
+  ru: "Русский",
   ko: "한국어",
   ja: "日本語",
   es: "Español",
