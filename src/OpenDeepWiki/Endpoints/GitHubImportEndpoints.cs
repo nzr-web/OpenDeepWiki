@@ -57,7 +57,8 @@ public static class GitHubImportEndpoints
             {
                 return Results.BadRequest(new { success = false, message = ex.Message });
             }
-        });
+        })
+        .RequireAuthorization("AdminOnly"); // NzrAiWiki: only admins may start wiki generation
 
         return app;
     }

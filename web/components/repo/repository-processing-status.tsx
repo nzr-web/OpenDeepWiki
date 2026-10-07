@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
@@ -95,6 +96,7 @@ export function RepositoryProcessingStatus({
   status: initialStatus,
 }: RepositoryProcessingStatusProps) {
   const t = useTranslations();
+  const isAdmin = useIsAdmin();
   const [status, setStatus] = useState<RepositoryStatus>(initialStatus);
   const [currentStep, setCurrentStep] = useState<ProcessingStep>("Workspace");
   const [totalDocuments, setTotalDocuments] = useState(0);
@@ -441,7 +443,7 @@ export function RepositoryProcessingStatus({
               )}
             </div>
 
-            {status === "Failed" && (
+            {status === "Failed" && isAdmin && (
               <button
                 type="button"
                 onClick={handleRetry}

@@ -400,6 +400,7 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseAdminOnlyGenerationRoutes(); // NzrAiWiki: only admins may start wiki generation
 
     // 限流放在认证之后，使分区策略能区分登录用户与匿名流量
     // app.UseRateLimiter(); // 已关闭全局限流

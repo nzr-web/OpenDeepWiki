@@ -7,6 +7,7 @@ import { GitBranch, Star, GitFork, Code, Plus, Loader2, ExternalLink, Home } fro
 import { Button } from "@/components/ui/button";
 import { submitRepository } from "@/lib/repository-api";
 import { useAuth } from "@/contexts/auth-context";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useTranslations } from "@/hooks/use-translations";
 import { resolveWikiLanguageFromUiLocale } from "@/i18n/config";
 import type { GitRepoCheckResponse } from "@/types/repository";
@@ -23,6 +24,7 @@ export function RepositoryNotFound({ owner, repo, gitHubInfo }: RepositoryNotFou
   const locale = useLocale();
   const t = useTranslations();
   const { isAuthenticated } = useAuth();
+  const isAdmin = useIsAdmin();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -150,6 +152,7 @@ export function RepositoryNotFound({ owner, repo, gitHubInfo }: RepositoryNotFou
 
           {/* 操作按钮 */}
           <div className="flex gap-3">
+            {isAdmin && (
             <Button
               className="flex-1"
               onClick={handleSubmit}
@@ -167,6 +170,7 @@ export function RepositoryNotFound({ owner, repo, gitHubInfo }: RepositoryNotFou
                 </>
               )}
             </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => window.open(gitHubInfo.gitUrl ?? "", "_blank")}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -108,6 +109,7 @@ function RepositoryCard({
   isRetrying: boolean;
 }) {
   const t = useTranslations();
+  const isAdmin = useIsAdmin();
   const createdDate = new Date(repo.createdAt).toLocaleDateString();
 
   // 生成正确编码的Wiki导航URL
@@ -173,7 +175,7 @@ function RepositoryCard({
                 </Link>
               </Button>
             )}
-            {repo.statusName === "Failed" && (
+            {repo.statusName === "Failed" && isAdmin && (
               <Button
                 variant="outline"
                 size="sm"

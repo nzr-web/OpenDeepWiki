@@ -12,6 +12,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/auth-context";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import Link from "next/link";
 
 const GithubIcon = ({ className }: { className?: string }) => (
@@ -23,6 +24,7 @@ const GithubIcon = ({ className }: { className?: string }) => (
 export default function PrivatePage() {
   const t = useTranslations();
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
   const [activeItem, setActiveItem] = useState(t("sidebar.private"));
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -45,6 +47,7 @@ export default function PrivatePage() {
               {t("common.privateRepos.description")}
             </p>
           </div>
+          {isAdmin && (
           <div className="flex items-center gap-2">
             <Link href="/private/github-import">
               <Button variant="outline" className="gap-2">
@@ -64,6 +67,7 @@ export default function PrivatePage() {
               </DialogContent>
             </Dialog>
           </div>
+          )}
         </div>
 
         <RepositoryList ownerId={ownerUserId} refreshTrigger={refreshTrigger} />

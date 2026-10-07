@@ -18,6 +18,7 @@ public static class RepositoryUploadEndpoints
             .WithTags("仓库")
             .WithName("SubmitArchiveRepository")
             .WithSummary("通过 ZIP 压缩包创建仓库")
+            .RequireAuthorization("AdminOnly") // NzrAiWiki: only admins may start wiki generation
             .DisableAntiforgery();
 
         return app;

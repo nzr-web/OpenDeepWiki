@@ -29,7 +29,8 @@ public static class IncrementalUpdateEndpoints
         repoGroup.MapPost("/{repositoryId}/branches/{branchId}/incremental-update", TriggerIncrementalUpdateAsync)
             .WithName("TriggerIncrementalUpdate")
             .WithSummary("手动触发增量更新")
-            .WithDescription("为指定仓库和分支创建一个高优先级的增量更新任务");
+            .WithDescription("为指定仓库和分支创建一个高优先级的增量更新任务")
+            .RequireAuthorization("AdminOnly"); // NzrAiWiki: only admins may start wiki generation
 
         // 增量更新任务管理端点
         var taskGroup = app.MapGroup("/api/v1/incremental-updates")
@@ -43,7 +44,8 @@ public static class IncrementalUpdateEndpoints
         taskGroup.MapPost("/{taskId}/retry", RetryFailedTaskAsync)
             .WithName("RetryFailedIncrementalUpdateTask")
             .WithSummary("重试失败任务")
-            .WithDescription("重试一个失败的增量更新任务");
+            .WithDescription("重试一个失败的增量更新任务")
+            .RequireAuthorization("AdminOnly"); // NzrAiWiki: only admins may start wiki generation
 
         return app;
     }

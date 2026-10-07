@@ -15,7 +15,8 @@ public static class BranchGenerationEndpoints
             .WithTags("Branch Generation");
 
         repoGroup.MapPost("/{repositoryId}/branches/{branchId}/generation-tasks/full", EnqueueFullGenerationAsync)
-            .WithName("EnqueueBranchFullGeneration");
+            .WithName("EnqueueBranchFullGeneration")
+            .RequireAuthorization("AdminOnly"); // NzrAiWiki: only admins may start wiki generation
 
         var taskGroup = app.MapGroup("/api/v1/branch-generation-tasks")
             .WithTags("Branch Generation Tasks");
@@ -23,7 +24,8 @@ public static class BranchGenerationEndpoints
         taskGroup.MapGet("/{taskId}", GetTaskAsync)
             .WithName("GetBranchGenerationTask");
         taskGroup.MapPost("/{taskId}/retry", RetryAsync)
-            .WithName("RetryBranchGenerationTask");
+            .WithName("RetryBranchGenerationTask")
+            .RequireAuthorization("AdminOnly"); // NzrAiWiki: only admins may start wiki generation
         taskGroup.MapPost("/{taskId}/cancel", CancelAsync)
             .WithName("CancelBranchGenerationTask");
 

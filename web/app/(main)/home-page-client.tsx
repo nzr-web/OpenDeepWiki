@@ -14,6 +14,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/auth-context";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { PublicRepositoryList } from "@/components/repo/public-repository-list";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ export function HomePageClient({ data }: HomePageClientProps) {
   const t = useTranslations();
   const router = useRouter();
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
   const [activeItem, setActiveItem] = useState(t("sidebar.explore"));
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
@@ -96,6 +98,7 @@ export function HomePageClient({ data }: HomePageClientProps) {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                {isAdmin && (
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                   <Button
                     className="h-9 gap-2 rounded-lg bg-teal-600 px-3.5 text-white hover:bg-teal-500"
@@ -110,6 +113,7 @@ export function HomePageClient({ data }: HomePageClientProps) {
                     )}
                   </DialogContent>
                 </Dialog>
+                )}
                 <Button
                   variant="outline"
                   className="h-9 gap-2 rounded-lg border-border/80 bg-background/60"
