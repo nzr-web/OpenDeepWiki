@@ -151,7 +151,7 @@ export function ChatPanel({
   const shareLink = React.useMemo(() => {
     if (!shareResult) return ""
     if (typeof window === "undefined") {
-      return `https://opendeepwiki.com/share/${shareResult.shareId}`
+      return `/share/${shareResult.shareId}`
     }
     return `${window.location.origin}/share/${shareResult.shareId}`
   }, [shareResult])

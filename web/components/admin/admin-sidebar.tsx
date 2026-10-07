@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { BRAND_NAME } from "@/lib/brand";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
@@ -215,7 +216,7 @@ export function AdminSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className="grid flex-1 text-left leading-tight">
                   <span className="truncate text-sm font-semibold">
-                    OpenDeepWiki
+                    {BRAND_NAME}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
                     {t("common.adminPanel")}

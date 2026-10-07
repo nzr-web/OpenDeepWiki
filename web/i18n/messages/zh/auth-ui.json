@@ -1,7 +1,7 @@
 {
   "backToHome": "返回首页",
   "aiPowered": "AI 驱动的知识库",
-  "title": "OpenDeepWiki",
+  "title": "NzrAiWiki",
   "subtitle": "深度理解代码仓库，让知识触手可及",
   "features": {
     "smartDocs": "智能文档生成",
@@ -11,12 +11,12 @@
     "githubIntegration": "GitHub 集成",
     "githubIntegrationDesc": "无缝连接你的 GitHub 仓库，管理私人项目"
   },
-  "copyright": "© 2026 OpenDeepWiki. 开源知识库平台",
+  "copyright": "© 2026 NzrAiWiki. 开源知识库平台",
   "mobileSubtitle": "深度理解代码仓库",
   "welcome": "欢迎回来",
   "createAccount": "创建账号",
   "loginDesc": "登录以访问你的知识库和私人仓库",
-  "registerDesc": "注册以开始使用 OpenDeepWiki",
+  "registerDesc": "注册以开始使用 NzrAiWiki",
   "email": "邮箱地址",
   "emailPlaceholder": "name@example.com",
   "password": "密码",

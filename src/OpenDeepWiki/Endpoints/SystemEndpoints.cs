@@ -34,7 +34,7 @@ public static class SystemEndpoints
             {
                 version = informationalVersion,
                 assemblyVersion = version,
-                productName = "OpenDeepWiki"
+                productName = "NzrAiWiki"
             }
         });
     }

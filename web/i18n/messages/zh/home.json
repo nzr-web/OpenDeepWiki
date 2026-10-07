@@ -37,10 +37,10 @@
     "backToPrivate": "返回私有仓库"
   },
   "exploreTrending": "探索本周的 热门仓库",
-  "mcpIntegration": "把 KeboolaDeepWiki MCP 接入你的开发工具 🔥",
+  "mcpIntegration": "把 NzrAiWiki MCP 接入你的开发工具 🔥",
   "integrations": {
     "title": "集成",
-    "description": "将 DeepWiki 与您的开发工具连接",
+    "description": "将 NzrAiWiki 与您的开发工具连接",
     "slack": {
       "title": "Slack 集成",
       "connected": "已连接",
@@ -50,7 +50,7 @@
     },
     "mcp": {
       "title": "MCP 服务器",
-      "description": "在您的 AI 工具中将 DeepWiki 用作 MCP 服务器。",
+      "description": "在您的 AI 工具中将 NzrAiWiki 用作 MCP 服务器。",
       "serverUrl": "服务器地址",
       "copied": "已复制！",
       "copyUrl": "复制地址",

@@ -1,7 +1,7 @@
 {
   "backToHome": "Volver al inicio",
   "aiPowered": "Base de conocimiento con IA",
-  "title": "OpenDeepWiki",
+  "title": "NzrAiWiki",
   "subtitle": "Comprensión profunda de repositorios de código",
   "features": {
     "smartDocs": "Generación inteligente de documentación",
@@ -11,12 +11,12 @@
     "githubIntegration": "Integración con GitHub",
     "githubIntegrationDesc": "Conecta sin interrupciones tus repositorios de GitHub y gestiona proyectos privados"
   },
-  "copyright": "© 2026 OpenDeepWiki. Plataforma de base de conocimiento de código abierto",
+  "copyright": "© 2026 NzrAiWiki. Plataforma de base de conocimiento de código abierto",
   "mobileSubtitle": "Comprensión profunda de repositorios de código",
   "welcome": "Bienvenido de nuevo",
   "createAccount": "Crear cuenta",
   "loginDesc": "Inicia sesión para acceder a tu base de conocimiento y repositorios privados",
-  "registerDesc": "Regístrate para empezar a usar OpenDeepWiki",
+  "registerDesc": "Regístrate para empezar a usar NzrAiWiki",
   "email": "Correo electrónico",
   "emailPlaceholder": "nombre@ejemplo.com",
   "password": "Contraseña",

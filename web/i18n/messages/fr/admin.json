@@ -864,7 +864,7 @@
     "fetchReposFailed": "Échec de la récupération des dépôts",
     "setupGuide": "Guide de configuration",
     "step1": "Crée un GitHub App dans les paramètres de ton organisation GitHub",
-    "step2": "Définis l'URL de rappel sur ton URL d'administration OpenDeepWiki + /admin/github-import/callback",
+    "step2": "Définis l'URL de rappel sur ton URL d'administration NzrAiWiki + /admin/github-import/callback",
     "step3": "Saisis ton ID de GitHub App et ta clé privée dans le formulaire de configuration ci-dessus",
     "step4": "Clique sur « Connecter une nouvelle organisation » pour installer l'app sur ton organisation",
     "configTitle": "Configuration du GitHub App",

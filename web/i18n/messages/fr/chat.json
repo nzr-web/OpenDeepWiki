@@ -1,7 +1,7 @@
 {
   "assistant": {
-    "title": "Agent OpenDeepWiki",
-    "greeting": "👋 Salut ! Je suis l'Agent OpenDeepWiki",
+    "title": "Agent NzrAiWiki",
+    "greeting": "👋 Salut ! Je suis l'Agent NzrAiWiki",
     "greetingSubtitle": "N'hésite pas à me poser des questions sur la documentation",
     "disabled": "L'agent est désactivé",
     "noModels": "Aucun modèle disponible. Contacte l'administrateur pour configurer des modèles",

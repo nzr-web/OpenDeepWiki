@@ -37,10 +37,10 @@
     "backToPrivate": "Back to Private"
   },
   "exploreTrending": "Explore This Week's Trending Repos",
-  "mcpIntegration": "Integrate KeboolaDeepWiki MCP into your dev tools 🔥",
+  "mcpIntegration": "Integrate NzrAiWiki MCP into your dev tools 🔥",
   "integrations": {
     "title": "Integrations",
-    "description": "Connect DeepWiki with your development tools",
+    "description": "Connect NzrAiWiki with your development tools",
     "slack": {
       "title": "Slack Integration",
       "connected": "Connected",
@@ -50,7 +50,7 @@
     },
     "mcp": {
       "title": "MCP Server",
-      "description": "Use DeepWiki as an MCP server in your AI tools.",
+      "description": "Use NzrAiWiki as an MCP server in your AI tools.",
       "serverUrl": "Server URL",
       "copied": "Copied!",
       "copyUrl": "Copy URL",

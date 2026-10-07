@@ -1,4 +1,5 @@
 import { getApiProxyUrl } from "./env";
+import { BRAND_NAME } from "./brand";
 import { getToken, UserInfo, ApiResponse } from "./auth-api";
 
 function getApiBaseUrl(): string {
@@ -237,7 +238,7 @@ export async function getSystemVersion(): Promise<SystemVersion> {
     return {
       version: "1.0.0",
       assemblyVersion: "1.0.0.0",
-      productName: "OpenDeepWiki",
+      productName: BRAND_NAME,
     };
   }
 
@@ -245,6 +246,6 @@ export async function getSystemVersion(): Promise<SystemVersion> {
   return result.data || {
     version: "1.0.0",
     assemblyVersion: "1.0.0.0",
-    productName: "OpenDeepWiki",
+    productName: BRAND_NAME,
   };
 }

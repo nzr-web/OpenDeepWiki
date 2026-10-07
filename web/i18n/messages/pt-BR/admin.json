@@ -864,7 +864,7 @@
     "fetchReposFailed": "Falha ao buscar repositórios",
     "setupGuide": "Guia de Configuração",
     "step1": "Crie um GitHub App nas configurações da sua organização do GitHub",
-    "step2": "Defina a URL de callback para a URL admin do seu DeepWiki + /admin/github-import/callback",
+    "step2": "Defina a URL de callback para a URL admin do seu NzrAiWiki + /admin/github-import/callback",
     "step3": "Insira o ID do GitHub App e a Chave Privada no formulário de configuração acima",
     "step4": "Clique em 'Conectar Nova Organização' para instalar o app na sua organização",
     "configTitle": "Configuração do GitHub App",

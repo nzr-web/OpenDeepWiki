@@ -45,7 +45,7 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
   const claudeDesktopConfig = JSON.stringify(
     {
       mcpServers: {
-        deepwiki: {
+        nzraiwiki: {
           url: mcpUrl,
         },
       },
