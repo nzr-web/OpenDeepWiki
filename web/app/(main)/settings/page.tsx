@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { BRAND_NAME } from "@/lib/brand";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -494,7 +495,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p>{systemVersion?.productName || "OpenDeepWiki"} v{systemVersion?.version || "1.0.0"}</p>
+                <p>{systemVersion?.productName || BRAND_NAME} v{systemVersion?.version || "1.0.0"}</p>
                 <p>{t("settings.aboutDescription")}</p>
               </div>
             </CardContent>

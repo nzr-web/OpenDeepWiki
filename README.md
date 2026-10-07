@@ -1,3 +1,13 @@
+# NzrAiWiki
+
+NzrAiWiki — форк [OpenDeepWiki](https://github.com/AIDotNet/OpenDeepWiki) (MIT): генерирует вики по git-репозиториям с помощью LLM и отдаёт её через веб-интерфейс и MCP. Интерфейс по умолчанию на русском.
+
+Вход по умолчанию: `admin@routin.ai` / `Admin@123` — смените пароль после первого входа.
+
+Ниже — исходный README проекта OpenDeepWiki.
+
+---
+
 # OpenDeepWiki
 
 [中文](README.zh-CN.md) | [English](README.md)

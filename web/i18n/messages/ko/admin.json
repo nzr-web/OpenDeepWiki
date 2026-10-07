@@ -859,7 +859,7 @@
     "fetchReposFailed": "저장소를 가져오지 못했습니다",
     "setupGuide": "설정 가이드",
     "step1": "GitHub 조직 설정에서 GitHub App을 생성하세요",
-    "step2": "콜백 URL을 DeepWiki 관리자 URL + /admin/github-import/callback으로 설정하세요",
+    "step2": "콜백 URL을 NzrAiWiki 관리자 URL + /admin/github-import/callback으로 설정하세요",
     "step3": "GITHUB_APP_ID와 GITHUB_APP_PRIVATE_KEY(base64로 인코딩된 PEM)를 백엔드 환경에 설정하세요",
     "step4": "‘새 조직 연결’을 클릭해 조직에 앱을 설치하세요",
     "configTitle": "GitHub App 설정",

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { buildRepoBasePath, buildRepoDocPath } from "@/lib/repo-route";
+import { BRAND_NAME } from "@/lib/brand";
 
-export const SITE_NAME = "OpenDeepWiki";
+export const SITE_NAME = BRAND_NAME;
 export const SITE_DESCRIPTION =
   "AI-powered code knowledge base for repository analysis and documentation generation";
 

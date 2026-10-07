@@ -12,11 +12,6 @@ import { useTranslations } from "@/hooks/use-translations";
 
 type AuthMode = "login" | "register";
 
-const defaultSeedAdmin = {
-  email: "admin@routin.ai",
-  password: "Admin@123",
-};
-
 export default function AuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -204,7 +199,7 @@ export default function AuthPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder={defaultSeedAdmin.email}
+                    placeholder={t("authUi.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -224,7 +219,7 @@ export default function AuthPage() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder={defaultSeedAdmin.password}
+                    placeholder={t("authUi.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required

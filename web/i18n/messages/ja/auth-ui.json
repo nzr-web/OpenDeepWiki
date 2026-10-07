@@ -1,7 +1,7 @@
 {
   "backToHome": "ホームに戻る",
   "aiPowered": "AI駆動の知識ベース",
-  "title": "OpenDeepWiki",
+  "title": "NzrAiWiki",
   "subtitle": "コードリポジトリを深く理解し、知識を手の届く範囲に",
   "features": {
     "smartDocs": "スマートドキュメント生成",
@@ -11,12 +11,12 @@
     "githubIntegration": "GitHub統合",
     "githubIntegrationDesc": "GitHubリポジトリをシームレスに接続し、プライベートプロジェクトを管理"
   },
-  "copyright": "© 2026 OpenDeepWiki. オープンソース知識ベースプラットフォーム",
+  "copyright": "© 2026 NzrAiWiki. オープンソース知識ベースプラットフォーム",
   "mobileSubtitle": "コードリポジトリを深く理解",
   "welcome": "おかえりなさい",
   "createAccount": "アカウント作成",
   "loginDesc": "ログインして知識ベースとプライベートリポジトリにアクセス",
-  "registerDesc": "登録してOpenDeepWikiの使用を開始",
+  "registerDesc": "登録してNzrAiWikiの使用を開始",
   "email": "メールアドレス",
   "emailPlaceholder": "name@example.com",
   "password": "パスワード",

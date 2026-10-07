@@ -1,7 +1,7 @@
 {
   "backToHome": "Back to Home",
   "aiPowered": "AI-powered knowledge base",
-  "title": "OpenDeepWiki",
+  "title": "NzrAiWiki",
   "subtitle": "Deep understanding of code repositories",
   "features": {
     "smartDocs": "Smart Documentation Generation",
@@ -11,12 +11,12 @@
     "githubIntegration": "GitHub Integration",
     "githubIntegrationDesc": "Seamlessly connect your GitHub repositories and manage private projects"
   },
-  "copyright": "© 2026 OpenDeepWiki. Open Source Knowledge Base Platform",
+  "copyright": "© 2026 NzrAiWiki. Open Source Knowledge Base Platform",
   "mobileSubtitle": "Deep understanding of code repositories",
   "welcome": "Welcome Back",
   "createAccount": "Create Account",
   "loginDesc": "Log in to access your knowledge base and private repositories",
-  "registerDesc": "Sign up to start using OpenDeepWiki",
+  "registerDesc": "Sign up to start using NzrAiWiki",
   "email": "Email Address",
   "emailPlaceholder": "name@example.com",
   "password": "Password",

@@ -37,10 +37,10 @@
     "backToPrivate": "Retour aux dépôts privés"
   },
   "exploreTrending": "Explore les dépôts tendance de cette semaine",
-  "mcpIntegration": "Intègre le MCP OpenDeepWiki à tes outils de développement 🔥",
+  "mcpIntegration": "Intègre le MCP NzrAiWiki à tes outils de développement 🔥",
   "integrations": {
     "title": "Intégrations",
-    "description": "Connecte OpenDeepWiki à tes outils de développement",
+    "description": "Connecte NzrAiWiki à tes outils de développement",
     "slack": {
       "title": "Intégration Slack",
       "connected": "Connecté",
@@ -50,7 +50,7 @@
     },
     "mcp": {
       "title": "Serveur MCP",
-      "description": "Utilise OpenDeepWiki comme serveur MCP dans tes outils IA.",
+      "description": "Utilise NzrAiWiki comme serveur MCP dans tes outils IA.",
       "serverUrl": "URL du serveur",
       "copied": "Copié !",
       "copyUrl": "Copier l'URL",

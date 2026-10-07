@@ -1,5 +1,7 @@
 "use client";
 
+import { BRAND_NAME, BRAND_REPO_URL } from "@/lib/brand";
+
 import {
   Compass,
   ThumbsUp,
@@ -148,7 +150,7 @@ export function AppSidebar({ activeItem, onItemClick, ...props }: AppSidebarProp
           <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sidebar-accent ring-1 ring-sidebar-border/80 transition-transform duration-200 group-hover/brand:scale-[1.03]">
             <Image
               src="/favicon.png"
-              alt="OpenDeepWiki"
+              alt={BRAND_NAME}
               width={22}
               height={22}
               className="rounded-sm"
@@ -156,7 +158,7 @@ export function AppSidebar({ activeItem, onItemClick, ...props }: AppSidebarProp
           </span>
           <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
             <span className="block truncate text-[15px] font-semibold tracking-tight text-sidebar-foreground">
-              OpenDeepWiki
+              {BRAND_NAME}
             </span>
             <span className="block truncate text-[11px] text-sidebar-foreground/50">
               {t("sidebar.brandTagline")}
@@ -246,7 +248,7 @@ export function AppSidebar({ activeItem, onItemClick, ...props }: AppSidebarProp
             className="h-8 flex-1 rounded-lg text-sidebar-foreground/65 hover:text-sidebar-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:flex-none"
           >
             <Link
-              href="https://github.com/AIDotNet/OpenDeepWiki"
+              href={BRAND_REPO_URL}
               target="_blank"
               className="gap-2"
             >
@@ -257,6 +259,8 @@ export function AppSidebar({ activeItem, onItemClick, ...props }: AppSidebarProp
             </Link>
           </SidebarMenuButton>
 
+          {/* NzrAiWiki: Feishu link hidden */}
+          {false && (
           <div
             className="relative flex-1 group-data-[collapsible=icon]:flex-none"
             onMouseEnter={() => setShowFeishuQr(true)}
@@ -291,6 +295,7 @@ export function AppSidebar({ activeItem, onItemClick, ...props }: AppSidebarProp
               </div>
             )}
           </div>
+          )}
         </div>
 
         {displayVersion && (

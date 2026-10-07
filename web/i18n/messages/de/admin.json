@@ -864,7 +864,7 @@
     "fetchReposFailed": "Repositories konnten nicht abgerufen werden",
     "setupGuide": "Einrichtungsanleitung",
     "step1": "Erstelle eine GitHub App in den Einstellungen deiner GitHub-Organisation",
-    "step2": "Setze die Callback-URL auf deine DeepWiki-Admin-URL + /admin/github-import/callback",
+    "step2": "Setze die Callback-URL auf deine NzrAiWiki-Admin-URL + /admin/github-import/callback",
     "step3": "Gib deine GitHub App-ID und deinen Privatschlüssel im Konfigurationsformular oben ein",
     "step4": "Klicke auf 'Neue Organisation verbinden', um die App in deiner Organisation zu installieren",
     "configTitle": "GitHub App-Konfiguration",

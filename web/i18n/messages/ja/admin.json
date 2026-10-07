@@ -859,7 +859,7 @@
     "fetchReposFailed": "リポジトリの取得に失敗しました",
     "setupGuide": "セットアップガイド",
     "step1": "GitHub 組織設定で GitHub App を作成します",
-    "step2": "コールバック URL を DeepWiki の管理 URL + /admin/github-import/callback に設定します",
+    "step2": "コールバック URL を NzrAiWiki の管理 URL + /admin/github-import/callback に設定します",
     "step3": "GITHUB_APP_ID と GITHUB_APP_PRIVATE_KEY（base64 エンコード済み PEM）をバックエンド環境に設定します",
     "step4": "「新しい組織を接続」をクリックして、組織にアプリをインストールします",
     "configTitle": "GitHub App 設定",
