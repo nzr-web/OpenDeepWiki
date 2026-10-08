@@ -19,6 +19,7 @@ using OpenDeepWiki.Services.AI;
 using OpenDeepWiki.Services.Chat;
 using OpenDeepWiki.Services.Prompts;
 using OpenDeepWiki.Services.Repositories;
+using OpenDeepWiki.Services.Wiki.EnvSecrets;
 using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
 namespace OpenDeepWiki.Services.Wiki;
@@ -341,6 +342,9 @@ Execute the workflow now. The runtime context already contains the directory tre
                 throw new InvalidOperationException(
                     $"Catalog generation completed without producing any catalog items for {workspace.Organization}/{workspace.RepositoryName} ({branchLanguage.LanguageCode}).");
             }
+
+            await MandatoryCatalogPages.EnsureEnvironmentPageAsync(
+                _context, branchLanguage.Id, branchLanguage.LanguageCode, _logger, cancellationToken);
 
             stopwatch.Stop();
             _logger.LogInformation(
@@ -937,6 +941,17 @@ Please start executing the task.";
 
 Please start executing the task.";
 
+            var budgets = EnvironmentPage.GetDocumentBudgets(catalogPath, _options);
+            var environmentScan = EnvironmentPage.IsEnvironmentPage(catalogPath)
+                ? new EnvironmentReferenceScanner(_logger).Scan(workspace.WorkingDirectory)
+                : null;
+            if (environmentScan is not null)
+            {
+                userMessage = EnvironmentPage.BuildEnvironmentPageMessage(
+                    workspace, branchLanguage.LanguageCode, gitBaseUrl, catalogPath, catalogTitle,
+                    EnvironmentReferenceScanner.Render(environmentScan), budgets);
+            }
+
             var contentAi = await ResolveContentModelAsync(cancellationToken);
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -945,7 +960,7 @@ Please start executing the task.";
                 // entities in a stale state even when SaveChanges did not persist.
                 using var context = _contextFactory.CreateContext();
                 var gitTool = new GitTool(workspace.WorkingDirectory);
-                var sourceTool = new DocumentSourceToolBudget(gitTool, _options.MaxDocumentSourceToolCalls);
+                var sourceTool = new DocumentSourceToolBudget(gitTool, budgets.SourceToolCalls);
                 var docTool = new DocTool(
                     context,
                     branchLanguage.Id,
@@ -962,9 +977,9 @@ Please start executing the task.";
                     1,
                     catalogPath,
                     catalogTitle,
-                    _options.MaxDocumentSourceToolCalls,
+                    budgets.SourceToolCalls,
                     _options.MaxDocumentAppendOperations,
-                    _options.MaxDocumentToolCalls);
+                    budgets.MaxToolCalls);
 
                 var attemptStartedAt = DateTime.UtcNow.AddSeconds(-1);
                 var exploration = await ExecuteAgentWithRetryAsync(
@@ -982,7 +997,7 @@ Please start executing the task.";
                         catalogPath,
                         contentAi.ModelId),
                     cancellationToken,
-                    maxToolCallsBeforeEarlyCompletion: _options.MaxDocumentToolCalls,
+                    maxToolCallsBeforeEarlyCompletion: budgets.MaxToolCalls,
                     earlyCompletionCheck: ct => HasPersistedDocumentContentAsync(
                         branchLanguage.Id,
                         catalogPath,
@@ -991,6 +1006,13 @@ Please start executing the task.";
 
                 if (await HasPersistedDocumentContentAsync(branchLanguage.Id, catalogPath, attemptStartedAt, cancellationToken))
                 {
+                    if (environmentScan is not null)
+                    {
+                        await EnvironmentPage.ApplyCompletenessPassAsync(
+                            _contextFactory, branchLanguage.Id, catalogPath, environmentScan,
+                            branchLanguage.LanguageCode, _logger, cancellationToken);
+                    }
+
                     stopwatch.Stop();
                     _logger.LogInformation(
                         "Document content generation completed. Path: {Path}, Title: {Title}, Duration: {Duration}ms",
@@ -1078,6 +1100,13 @@ Source grounding:
 
                 if (await HasPersistedDocumentContentAsync(branchLanguage.Id, catalogPath, attemptStartedAt, cancellationToken))
                 {
+                    if (environmentScan is not null)
+                    {
+                        await EnvironmentPage.ApplyCompletenessPassAsync(
+                            _contextFactory, branchLanguage.Id, catalogPath, environmentScan,
+                            branchLanguage.LanguageCode, _logger, cancellationToken);
+                    }
+
                     stopwatch.Stop();
                     _logger.LogInformation(
                         "Document content generation completed after mandatory WriteDoc pass. Path: {Path}, ToolCalls: {ToolCalls}, Duration: {Duration}ms",
